@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyScada Data Viewer</title>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+        .status {
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>MyScada Data</h1>
+    <div id="status">Checking server status...</div>
+    <div class="status">
+        <span>Scada Status: </span>
+        <span id="scadaStatus">Loading...</span>
+    </div>
+    <h2>Tag List</h2>
+    <table id="scadaTable">
+        <thead>
+            <tr>
+                <th>Tag Name</th>
+                <th>Type</th>
+                <th>Value</th>
+            </tr>
+        </thead>
+        <tbody id="scadaData">
+            <tr><td colspan="3">Loading...</td></tr>
+        </tbody>
+    </table>
+
+    <script>
+        const socket = io('https://sclakumtestapp.loca.lt/');
+        const statusDiv = document.getElementById('status');
+        const scadaStatusDiv = document.getElementById('scadaStatus');
+        const scadaDataBody = document.getElementById('scadaData');
+
+        socket.on('connect', () => {
+            console.log('Connected to the backend server');
+            statusDiv.textContent = 'Server Status: Online';
+            statusDiv.style.color = 'green';
+        });
+
+        socket.on('scadaData', (data) => {
+            scadaDataBody.innerHTML = ''; // Clear previous data
+
+            // Display the ScadaStatus
+            if (data && typeof data.ScadaStatus !== 'undefined') {
+                scadaStatusDiv.textContent = data.ScadaStatus ? 'Online' : 'Offline';
+                scadaStatusDiv.style.color = data.ScadaStatus ? 'green' : 'red';
+            } else {
+                scadaStatusDiv.textContent = 'Unknown';
+                scadaStatusDiv.style.color = 'gray';
+            }
+
+            // Display the MyScadaTags data in the table
+            if (data && data.MyScadaTags) {
+                const tags = data.MyScadaTags;
+
+                // Loop through each tag and create a row
+                Object.values(tags).forEach(tag => {
+                    const row = document.createElement('tr');
+                    const tagNameCell = document.createElement('td');
+                    tagNameCell.textContent = tag.TagName;
+                    
+                    const typeCell = document.createElement('td');
+                    typeCell.textContent = tag.Type;
+
+                    const valueCell = document.createElement('td');
+                    valueCell.textContent = tag.Value;
+
+                    row.appendChild(tagNameCell);
+                    row.appendChild(typeCell);
+                    row.appendChild(valueCell);
+                    scadaDataBody.appendChild(row);
+                });
+            } else {
+                const row = document.createElement('tr');
+                const cell = document.createElement('td');
+                cell.textContent = 'No data available';
+                cell.colSpan = 3;
+                row.appendChild(cell);
+                scadaDataBody.appendChild(row);
+            }
+        });
+
+        socket.on('disconnect', () => {
+            console.log('Disconnected from the backend server');
+            statusDiv.textContent = 'Server Status: Offline';
+            statusDiv.style.color = 'red';
+            scadaStatusDiv.textContent = 'Unknown';
+            scadaStatusDiv.style.color = 'gray';
+            scadaDataBody.innerHTML = '<tr><td colspan="3">Connection lost. Trying to reconnect...</td></tr>';
+        });
+
+        socket.on('connect_error', () => {
+            statusDiv.textContent = 'Server Status: Offline';
+            statusDiv.style.color = 'red';
+            scadaStatusDiv.textContent = 'Unknown';
+            scadaStatusDiv.style.color = 'gray';
+        });
+    </script>
+</body>
+</html>
