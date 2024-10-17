@@ -24,10 +24,10 @@
     </style>
 </head>
 <body>
-    <h1>MyScada Data 1</h1>
+    <h1>MyScada Data</h1>
     <div id="status">Checking server status...</div>
     <div class="status">
-        <span id="serverStatus">Scada Status: </span>
+        <span>Scada Status: </span>
         <span id="scadaStatus">Loading...</span>
     </div>
     <h2>Tag List</h2>
@@ -46,13 +46,13 @@
 
     <script>
         const socket = io('https://myscadatest.serveo.net/');
-        const statusDiv = document.getElementById('serverStatus');
+        const statusDiv = document.getElementById('status');
         const scadaStatusDiv = document.getElementById('scadaStatus');
         const scadaDataBody = document.getElementById('scadaData');
 
         socket.on('connect', () => {
             console.log('Connected to the backend server');
-            statusDiv.textContent = 'Online';
+            statusDiv.textContent = 'Server Status: Online';
             statusDiv.style.color = 'green';
         });
 
@@ -101,7 +101,7 @@
 
         socket.on('disconnect', () => {
             console.log('Disconnected from the backend server');
-            statusDiv.textContent = 'Offline';
+            statusDiv.textContent = 'Server Status: Offline';
             statusDiv.style.color = 'red';
             scadaStatusDiv.textContent = 'Unknown';
             scadaStatusDiv.style.color = 'gray';
@@ -109,7 +109,7 @@
         });
 
         socket.on('connect_error', () => {
-            statusDiv.textContent = 'Offline';
+            statusDiv.textContent = 'Server Status: Offline';
             statusDiv.style.color = 'red';
             scadaStatusDiv.textContent = 'Unknown';
             scadaStatusDiv.style.color = 'gray';
